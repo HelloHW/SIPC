@@ -1,0 +1,269 @@
+10
+
+dir
+3219
+https://eli.zhonghuawei@svn.staginfo.com/svn/appware/SIPC/SIPC_IOS/trunk/SIPC/SIPC/Assets.xcassets/image
+https://eli.zhonghuawei@svn.staginfo.com/svn/appware
+
+
+
+2018-02-06T07:27:38.052075Z
+3198
+eli.zhonghuawei
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fd5a314d-dbbc-e24e-a3f4-132882ddab6a
+
+siteInfo_default.imageset
+dir
+
+fence_default.imageset
+dir
+
+maintenance_default.imageset
+dir
+
+initDevice_default.imageset
+dir
+
+key_show.imageset
+dir
+
+ic_end_point.imageset
+dir
+
+alarm_select.imageset
+dir
+
+告警3.imageset
+dir
+
+xiala.imageset
+dir
+
+back.imageset
+dir
+
+原点坐标.imageset
+dir
+
+alarm_normal.imageset
+dir
+
+lockInfo.imageset
+dir
+
+lishiguiji_default.imageset
+dir
+
+gaojin_select.imageset
+dir
+
+告警.imageset
+dir
+
+ic_car.imageset
+dir
+
+refresh_pressed.imageset
+dir
+
+version.imageset
+dir
+
+LeftList.imageset
+dir
+
+initSite_select.imageset
+dir
+
+bg.imageset
+dir
+
+searchDevice_default.imageset
+dir
+
+alarm.imageset
+dir
+
+Listen_select.imageset
+dir
+
+permitted.imageset
+dir
+
+follow_select.imageset
+dir
+
+Listen_default.imageset
+dir
+
+site.imageset
+dir
+
+follow_default.imageset
+dir
+
+switchLock.imageset
+dir
+
+gaojin_default.imageset
+dir
+
+fence_select.imageset
+dir
+
+siteInfo_select.imageset
+dir
+
+login_bg.imageset
+dir
+
+key_hide.imageset
+dir
+
+查询.imageset
+dir
+
+searchDevice_select.imageset
+dir
+
+Fence_radius.imageset
+dir
+
+地图切换2.imageset
+dir
+
+begin_point.imageset
+dir
+
+个人中心.imageset
+dir
+
+refresh.imageset
+dir
+
+lishiguiji_select.imageset
+dir
+
+device.imageset
+dir
+
+search.imageset
+dir
+
+person.imageset
+dir
+
+地图切换.imageset
+dir
+
+Contents.json
+file
+
+
+
+
+2018-02-11T05:44:36.000000Z
+31cc68f34934a99c0b0c1bebde56309c
+2018-02-02T02:01:04.749236Z
+3188
+eli.zhonghuawei
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+62
+
+Call.imageset
+dir
+
+Icon_person.imageset
+dir
+
+PersonBG.imageset
+dir
+
+xiala2.imageset
+dir
+
+initDevice_select.imageset
+dir
+
+设备.imageset
+dir
+
+checked.imageset
+dir
+
+unchecked.imageset
+dir
+
+告警2.imageset
+dir
+
+initSite_default.imageset
+dir
+
+backImage.imageset
+dir
+
+keyInfo.imageset
+dir
+
+go.imageset
+dir
+
+person_select.imageset
+dir
+
+refresh_normal.imageset
+dir
+
+manager_select.imageset
+dir
+
+person_default.imageset
+dir
+
+注销.imageset
+dir
+
+manager_default.imageset
+dir
+
+end_point.imageset
+dir
+
+maintenance_select.imageset
+dir
+

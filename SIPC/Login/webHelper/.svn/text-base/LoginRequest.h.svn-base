@@ -1,0 +1,16 @@
+//
+//  LoginRequest.h
+//  ABMS
+//
+//  Created by ELI on 17/8/17.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface LoginRequest : NSObject
++(LoginRequest*)shareInsetanse;
+-(void)LoginWithUserName:(NSString*)userName Password:(NSString*)password
+                 success:(void (^)(NSString * backStr))success
+                 failure:(void (^)(NSString *failReason))failure;;
+@end

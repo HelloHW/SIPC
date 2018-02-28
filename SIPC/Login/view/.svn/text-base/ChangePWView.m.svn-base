@@ -1,0 +1,62 @@
+//
+//  ChangePWView.m
+//  ABMS
+//
+//  Created by ELI.钟华威 on 17/8/23.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import "ChangePWView.h"
+
+@implementation ChangePWView
+
+-(void)initNewView{
+    _AnewPWTF = [[UnderLinerTF alloc]initWithColor:[UIColor blackColor]];
+    _AnewPWTF.frame = CGRectMake(20, 30, self.frame.size.width - 40, 30);
+    _AnewPWTF.placeholder = @"请输入新密码";
+    _AnewPWTF.delegate = self;
+    _AnewPWTF.secureTextEntry = YES;
+    [self addSubview:_AnewPWTF];
+    
+    _ConfirmNewPWTF = ({
+        UnderLinerTF * tf = [[UnderLinerTF alloc]initWithColor:[UIColor blackColor]];
+        tf.frame = CGRectMake(20, _AnewPWTF.frame.origin.y + 50, self.frame.size.width - 40, 30);
+        tf.placeholder = @"请再次输入新密码";
+        tf.secureTextEntry = YES;
+        tf.delegate = self;
+        [self addSubview:tf];
+        tf;
+    });
+    
+    _confirmBut = ({
+        UIButton * but = [[UIButton alloc]initWithFrame:CGRectMake(20, _ConfirmNewPWTF.frame.origin.y+100, self.frame.size.width - 40, 40)];
+        [but setTitle:@"确认修改" forState:UIControlStateNormal];
+        [but setBackgroundColor:[UIColor colorWithRed:0.4745 green:0.7529 blue:0.9608 alpha:1]];
+        but.layer.cornerRadius = 5.0;
+        [self addSubview:but];
+        but;
+    });
+    
+    
+    
+}
+
+-(void)textFieldDidBeginEditing:(UITextField *)textField{
+    
+}
+
+-(BOOL)textFieldShouldReturn:(UITextField *)textField{
+    [textField resignFirstResponder];
+    return YES;
+}
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

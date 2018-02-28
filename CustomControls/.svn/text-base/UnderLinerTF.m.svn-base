@@ -1,0 +1,36 @@
+//
+//  UnderLinerTF.m
+//  Sterm
+//
+//  Created by ELI on 16/12/28.
+//  Copyright © 2016年 Stag. All rights reserved.
+//
+
+#import "UnderLinerTF.h"
+
+@implementation UnderLinerTF
+-(id)init{
+    return [self initWithColor:nil];
+}
+-(id)initWithColor:(UIColor*)color{
+    if (self == [super init]) {
+        _color = color;
+    }
+    return self;
+}
+-(void)drawRect:(CGRect)rect{
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(context, [_color CGColor]);
+    CGContextFillRect(context, CGRectMake(0, CGRectGetHeight(self.frame)-1, CGRectGetWidth(self.frame), 1));
+}
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

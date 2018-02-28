@@ -1,0 +1,95 @@
+10
+
+dir
+3219
+https://eli.zhonghuawei@svn.staginfo.com/svn/appware/SIPC/SIPC_IOS/trunk/SIPC/SIPC/Assets.xcassets
+https://eli.zhonghuawei@svn.staginfo.com/svn/appware
+
+
+
+2018-02-06T07:27:38.052075Z
+3198
+eli.zhonghuawei
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fd5a314d-dbbc-e24e-a3f4-132882ddab6a
+
+Image.imageset
+dir
+
+drawable
+dir
+
+image
+dir
+
+btn_take.imageset
+dir
+
+bg.imageset
+dir
+
+btn_flash_auto.imageset
+dir
+
+btn_switchover_camera.imageset
+dir
+
+Contents.json
+file
+
+
+
+
+2018-02-11T05:44:36.000000Z
+31cc68f34934a99c0b0c1bebde56309c
+2018-02-02T02:01:04.749236Z
+3188
+eli.zhonghuawei
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+62
+
+btn_flash_off.imageset
+dir
+
+AppIcon.appiconset
+dir
+
+btn_flash_open.imageset
+dir
+
+camera_focus_red.imageset
+dir
+

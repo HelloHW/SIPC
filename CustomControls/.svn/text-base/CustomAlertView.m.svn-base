@@ -1,0 +1,77 @@
+//
+//  CustomAlertView.m
+//  ABMS
+//
+//  Created by ELI.钟华威 on 17/10/24.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import "CustomAlertView.h"
+
+@interface CustomAlertView ()
+@property(nonatomic,strong)UIWindow*alertWindow;
+@end
+
+@implementation CustomAlertView
+
+- (void)showAnimated:(BOOL)animated {
+    
+    UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    [window setBackgroundColor:[UIColor clearColor]];
+    UIViewController*rootViewController = [[UIViewController alloc] init];
+    [[rootViewController view] setBackgroundColor:[UIColor clearColor]];
+    // set window level
+    [window setWindowLevel:UIWindowLevelAlert + 1];
+    [window makeKeyAndVisible];
+    [self setAlertWindow:window];
+    [window setRootViewController:rootViewController];
+    
+    [rootViewController presentViewController:self animated:animated completion:nil];
+}
+
+
++ (void)presentOkayWithTitle:(NSString*)title message:(NSString*)message {
+    
+    CustomAlertView * alertController = [CustomAlertView alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+    
+    //创建UIAlertAction
+    
+    UIAlertAction*okayAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:^(UIAlertAction*_Nonnull action) {
+        
+    }];
+    
+    [alertController addAction:okayAction];
+    
+    UIAlertAction*errorAction = [UIAlertAction actionWithTitle:@"取消"     style:UIAlertActionStyleCancel handler:^(UIAlertAction*_Nonnull action) {
+        
+        // you code for cancle action
+        
+    }];
+    
+    [alertController addAction:errorAction];
+    [alertController showAnimated:YES];
+    
+}
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

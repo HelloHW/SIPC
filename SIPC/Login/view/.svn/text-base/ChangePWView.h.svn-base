@@ -1,0 +1,17 @@
+//
+//  ChangePWView.h
+//  ABMS
+//
+//  Created by ELI.钟华威 on 17/8/23.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "UnderLinerTF.h"
+@interface ChangePWView : UIView<UITextFieldDelegate>
+@property(nonatomic,strong)UnderLinerTF * AnewPWTF;
+@property(nonatomic,strong)UnderLinerTF * ConfirmNewPWTF;
+@property(nonatomic,strong)UIButton * confirmBut;
+
+-(void)initNewView;
+@end

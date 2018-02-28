@@ -1,0 +1,14 @@
+//
+//  UnderLinerTF.h
+//  Sterm
+//
+//  Created by ELI on 16/12/28.
+//  Copyright © 2016年 Stag. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface UnderLinerTF : UITextField
+@property(nonatomic,strong)UIColor * color;
+-(id)initWithColor:(UIColor*)color;
+@end

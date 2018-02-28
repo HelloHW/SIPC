@@ -1,0 +1,14 @@
+//
+//  CustomAlertView.h
+//  ABMS
+//
+//  Created by ELI.钟华威 on 17/10/24.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface CustomAlertView : UIAlertController
++ (void)presentOkayWithTitle:(NSString*)title message:(NSString*)message;
+
+@end

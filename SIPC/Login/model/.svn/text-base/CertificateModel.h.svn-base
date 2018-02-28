@@ -1,0 +1,20 @@
+//
+//  CertificateModel.h
+//  Sterm
+//
+//  Created by TomXu on 16/4/28.
+//  Copyright (c) 2016年 Stag. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface CertificateModel : NSObject
+@property(nonatomic,strong)NSString * creationDate;     //生效时间
+@property(nonatomic,strong)NSString * invalidDate;     //失效时间
+@property(nonatomic,strong)NSString * secretKey;//操作密钥（加密解密）
+@property(nonatomic,strong)NSString * userId;     //用户ID
+@property(nonatomic,strong)NSString * severID;     //服务器ID
+@property(nonatomic,strong)NSString * phone;     //手机号码
+@property(nonatomic,strong)NSString * name;     //终端名称
+
+@end

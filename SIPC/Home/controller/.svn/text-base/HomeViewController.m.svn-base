@@ -1,0 +1,710 @@
+//
+//  HomeViewController.m
+//  ABMS
+//
+//  Created by ELI.钟华威 on 2018/1/5.
+//  Copyright © 2018年 Stag. All rights reserved.
+//
+static NSString *headerViewIdentity = @"HomeHeadCollectionReusableView";
+static NSString *homeCellIdentity = @"HomeCollectionViewCell";
+#import "HomeViewController.h"
+#import "LLSlideMenu.h"
+#import "CustomPieView.h"
+#import "Device_Main_ViewController.h"
+//#import "JPUSHService.h"
+#define RGBCOLOR(r,g,b,_alpha) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:_alpha]
+@interface HomeViewController ()<UICollectionViewDelegate,UICollectionViewDataSource,UITableViewDelegate,UITableViewDataSource>
+{
+    HomeHeadCollectionReusableView *headView;
+    CustomPieView *chartView;
+    
+    NSMutableArray *segmentDataArray;
+    
+    NSMutableArray *segmentTitleArray;
+    
+    NSMutableArray *segmentColorArray;
+    UIView * showView;
+    UILabel * TitleLabel;
+    
+    WarnRequest * warnHelper;
+    BOOL IsPerson;
+    
+    UITableView * letfTabelView;
+    NSMutableArray * TabelViewDataArr;
+    
+    AlarmTipsButton *alarmButton;
+    NSInteger alarmNum;
+    
+    DataHelper * helper;
+}
+@property (nonatomic, strong) LLSlideMenu *slideMenu;
+
+// 全屏侧滑手势
+@property (nonatomic, strong) UIPanGestureRecognizer *leftSwipe;
+@property (nonatomic, strong) UIPercentDrivenInteractiveTransition *percent;
+
+//网格
+@property (nonatomic, strong) UICollectionView *collectionView;
+@property (strong, nonatomic) NSMutableArray *firstSectionCellModelArray,*secondSectionCellModelArray,*thirdSectionCellModelArray,*headTitleArray;
+
+//授权
+@property (strong, nonatomic) NSMutableArray *ticketDetailArray;
+@property (strong ,nonatomic) DownloadTicketHelper * downloadTickethelper;
+@end
+
+
+@implementation HomeViewController
+- (NSMutableArray *)firstSectionCellModelArray {
+    if (!_firstSectionCellModelArray) {
+        _firstSectionCellModelArray = [NSMutableArray arrayWithCapacity:0];
+        NSArray * titleArr = [NSArray arrayWithObjects:@"申请", @"审批", @"已审",@"取消申请",nil];
+        NSArray * imageArr = [NSArray arrayWithObjects:@"application", @"approve1", @"approved",@"blue_pending", nil];
+        for (int i = 0; i < titleArr.count; i++) {
+            CollectionCellModel *model = [CollectionCellModel createNewCellModel:titleArr[i] imageUrl:imageArr[i]];
+            //        model.operateType = LOCKDETAILINFO;
+            [_firstSectionCellModelArray addObject:model];
+        }
+    }
+    return _firstSectionCellModelArray;
+}
+
+//模拟数据,当从后台请求到权限时将该数组换为可变数组
+- (NSMutableArray *)secondSectionCellModelArray {
+    if (!_secondSectionCellModelArray) {
+        _secondSectionCellModelArray = [NSMutableArray arrayWithCapacity:0];
+        NSArray * titleArr = [NSArray arrayWithObjects:@"锁具信息",@"初始化", @"开关锁", @"更换密钥",@"复位", @"超级清空", @"设置门磁",nil];
+        NSArray * imageArr = [NSArray arrayWithObjects:@"lock_info" ,@"init1", @"mid_lock", @"change_key_code",@"reset", @"super_clear",  @"magnetic", nil];
+        for (int i = 0; i < titleArr.count; i++) {
+            CollectionCellModel *model = [CollectionCellModel createNewCellModel:titleArr[i] imageUrl:imageArr[i]];
+//        model.operateType = LOCKDETAILINFO;
+            [_secondSectionCellModelArray addObject:model];
+        }
+    }
+    return _secondSectionCellModelArray;
+}
+
+-(NSMutableArray*)thirdSectionCellModelArray{
+    if (!_thirdSectionCellModelArray) {
+        _thirdSectionCellModelArray = [NSMutableArray arrayWithCapacity:0];
+        NSArray * titleArr = [NSArray arrayWithObjects:@"设备管理", @"站点管理" ,@"锁具管理",nil];
+        NSArray * imageArr = [NSArray arrayWithObjects:  @"siteInfo_select",   @"initSite_select",@"mid_lock", nil];
+        for (int i = 0; i < titleArr.count; i++) {
+            CollectionCellModel *model = [CollectionCellModel createNewCellModel:titleArr[i] imageUrl:imageArr[i]];
+            //        model.operateType = LOCKDETAILINFO;
+            [_thirdSectionCellModelArray addObject:model];
+        }
+    }
+    return _thirdSectionCellModelArray;
+}
+
+-(NSMutableArray*)headTitleArray{
+    if (!_headTitleArray) {
+        _headTitleArray = [NSMutableArray arrayWithObjects:@"权限管理", @"资源管理", nil];
+    }
+    return _headTitleArray;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    warnHelper = [WarnRequest shareInsetanse];
+    IsPerson = YES;
+    segmentDataArray = [NSMutableArray array];
+    segmentTitleArray = [NSMutableArray array];
+    segmentColorArray = [NSMutableArray array];
+    alarmNum = 0;
+    self.navigationController.navigationBar.barTintColor = kMainColor;
+    self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+    UIButton *backButton = [[UIButton alloc]initWithFrame:CGRectMake(-20, 0, 40, 40)];
+    [backButton setImage:[UIImage imageNamed:@"LeftList.png"] forState:UIControlStateNormal];
+    [backButton addTarget:self action:@selector(openLLSlideMenuAction) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *backItem = [[UIBarButtonItem alloc]initWithCustomView:backButton];
+    self.navigationItem.leftBarButtonItem = backItem;
+    
+    alarmButton = [[AlarmTipsButton alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
+    [alarmButton initView];
+    [alarmButton.alarmBut addTarget:self action:@selector(alarmClick) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *alarmItem = [[UIBarButtonItem alloc]initWithCustomView:alarmButton];
+    self.navigationItem.rightBarButtonItem = alarmItem;
+    
+    //TODO:饼图头部视图初始化
+    showView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, 150)];
+    [self.view addSubview:showView];
+    TitleLabel = [[UILabel alloc]initWithFrame:CGRectMake(5, 5, 150,30)];
+    TitleLabel.text = @"告警总量：";
+    
+    UIButton * showDetailBut = [[UIButton alloc]initWithFrame:CGRectMake(CGRectGetMaxX(TitleLabel.frame), 5, 100, 30)];
+    [showDetailBut setTitle:@">>>详细告警" forState:UIControlStateNormal];
+    showDetailBut.titleLabel.font = [UIFont boldSystemFontOfSize:13];
+    [showDetailBut setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [showDetailBut addTarget:self action:@selector(detailClick) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton * refreshBut = [[UIButton alloc]initWithFrame:CGRectMake(kScreenWidth-40, 5, 30, 30)];
+    [refreshBut setBackgroundImage:[UIImage imageNamed:@"refresh"] forState:UIControlStateNormal];
+    [refreshBut addTarget:self action:@selector(refreshClick) forControlEvents:UIControlEventTouchUpInside];
+    
+    [showView addSubview:TitleLabel];
+    [showView addSubview:showDetailBut];
+    [showView addSubview:refreshBut];
+    
+    [self loadPieDataWithIsPerson:IsPerson IsFirstTimeReload:YES];
+    //TODO:单选按钮初始化
+//    NSMutableArray* buttonsArray = [NSMutableArray arrayWithCapacity:3];
+//    CGRect btnRect = CGRectMake(showView.frame.size.width - 95, 60, 90, 30);
+//    NSArray * titleArr = @[@"个人告警", @"全部告警"];
+//    for (int i = 0; i <titleArr.count; i++ ) {
+//        NSString * optionTitle = titleArr[i];
+//        RadioButton* btn = [[RadioButton alloc] initWithFrame:btnRect];
+//        btn.tag = i;
+//        [btn addTarget:self action:@selector(onRadioButtonValueChanged:) forControlEvents:UIControlEventValueChanged];
+//        btnRect.origin.y += 40;
+//        [btn setTitle:optionTitle forState:UIControlStateNormal];
+//        [btn setTitleColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
+//        btn.titleLabel.font = [UIFont boldSystemFontOfSize:13];
+//        [btn setImage:[UIImage imageNamed:@"unchecked.png"] forState:UIControlStateNormal];
+//        [btn setImage:[UIImage imageNamed:@"checked.png"] forState:UIControlStateSelected];
+//        btn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+//        btn.titleEdgeInsets = UIEdgeInsetsMake(0, 6, 0, 0);
+//        [showView addSubview:btn];
+//        [buttonsArray addObject:btn];
+//    }
+//    [buttonsArray[0] setGroupButtons:buttonsArray]; // 把按钮放进群组中
+//    [buttonsArray[0] setSelected:YES]; // 初始化第一个按钮为选中状态
+    //TODO:网格初始化
+    UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+    _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(showView.frame), kScreenWidth, kScreenHeight-CGRectGetMaxY(showView.frame)-SafeAreaTopHeight) collectionViewLayout:layout];
+    _collectionView.delegate = self;
+    _collectionView.dataSource = self;
+    _collectionView.backgroundColor = [UIColor whiteColor];
+    //通过Nib生成cell，然后注册 Nib的view需要继承 UICollectionViewCell
+    [self.collectionView registerNib:[UINib nibWithNibName:homeCellIdentity bundle:nil] forCellWithReuseIdentifier:homeCellIdentity];
+    self.collectionView.alwaysBounceVertical = YES;
+    
+    //注册headerView Nib的view需要继承UICollectionReusableView
+    [self.collectionView registerNib:[UINib nibWithNibName:headerViewIdentity bundle:nil] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:headerViewIdentity];
+    [self.view addSubview:_collectionView];
+    
+//TODO:侧滑初始化
+    _slideMenu = [[LLSlideMenu alloc] init];
+    [self.view addSubview:_slideMenu];
+    // 设置菜单宽度
+    _slideMenu.ll_menuWidth = 180.f;
+    // 设置菜单背景色
+    _slideMenu.ll_menuBackgroundColor = [UIColor whiteColor];
+    // 设置弹力和速度，  默认的是20,15,60
+    _slideMenu.ll_springDamping = 20;       // 阻力
+    _slideMenu.ll_springVelocity = 15;      // 速度
+    _slideMenu.ll_springFramesNum = 60;     // 关键帧数量
+    
+    UIView * headBackView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, _slideMenu.ll_menuWidth, 180)];
+    //设置渐变颜色
+    //初始化CAGradientlayer对象，使它的大小为UIView的大小
+    CAGradientLayer *gradientLayer = [CAGradientLayer layer];
+    gradientLayer.frame = headBackView.bounds;
+    //将CAGradientlayer对象添加在我们要设置背景色的视图的layer层
+    [headBackView.layer addSublayer:gradientLayer];
+    //设置渐变区域的起始和终止位置（范围为0-1）
+    gradientLayer.startPoint = CGPointMake(0, 0);
+    gradientLayer.endPoint = CGPointMake(0, 1);
+    //设置颜色数组
+    gradientLayer.colors = @[(__bridge id)[UIColor blueColor].CGColor,
+                                  (__bridge id)[UIColor redColor].CGColor];
+    //设置颜色分割点（范围：0-1）
+    gradientLayer.locations = @[@(0.5f), @(1.0f)];
+    [_slideMenu addSubview:headBackView];
+    
+    // Menu添加子View
+    UIImageView *img = [[UIImageView alloc] initWithFrame:CGRectMake(50, 40, 80, 80)];
+    [img setImage:[UIImage imageNamed:@"个人中心"]];
+    
+    // 添加触摸事件
+    img.userInteractionEnabled = YES;
+    [img addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(imageViewTapAction)]];
+    [headBackView addSubview:img];
+    
+    UILabel * nameLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(img.frame), 180, 50)];
+    NSString * plistPath = USERS_PLIST_PATH;
+    NSDictionary* dic = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    nameLabel.text =[NSString stringWithFormat:@"%@\n%@",dic[@"displayName"],dic[@"phone"]];
+    [nameLabel setTextColor:[UIColor whiteColor]];
+    nameLabel.textAlignment = NSTextAlignmentCenter;
+    [nameLabel setNumberOfLines:0];
+    [headBackView addSubview:nameLabel];
+    
+    TabelViewDataArr = [NSMutableArray array];
+    NSArray * tabelTitleArr = [NSArray arrayWithObjects:@"个人信息", @"版本:1.0.3.0", @"注销",nil];
+    NSArray * tabelImageArr = [NSArray arrayWithObjects:@"person", @"version", @"注销",  nil];
+    for (int i = 0; i < tabelTitleArr.count; i++) {
+        CollectionCellModel *model = [CollectionCellModel createNewCellModel:tabelTitleArr[i] imageUrl:tabelImageArr[i]];
+        [TabelViewDataArr addObject:model];
+    }
+    letfTabelView = [[UITableView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(headBackView.frame), _slideMenu.ll_menuWidth, 132)];
+    letfTabelView.delegate = self;
+    letfTabelView.dataSource = self;
+    letfTabelView.rowHeight = 44;
+    [letfTabelView registerNib:[UINib nibWithNibName:@"LeftTableViewCell" bundle:nil] forCellReuseIdentifier:@"Cell"];
+    [_slideMenu addSubview:letfTabelView];
+    
+    // 添加全屏侧滑手势
+    self.leftSwipe = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(swipeLeftHandle:)];
+    self.leftSwipe.maximumNumberOfTouches = 1;
+    [self.view addGestureRecognizer:_leftSwipe];
+    
+    //观察极光推送的事件
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushAlertView:) name:@"ISJPUSH" object:nil];
+    //TODO:授权
+    helper = [DataHelper shareInsetanse];
+    _downloadTickethelper = [DownloadTicketHelper shareInsetanse];
+    _ticketDetailArray = [NSMutableArray array];
+    appDelegate.userId = [appDelegate.dic objectForKey:@"uuid"];
+//    appDelegate.serverIP = [appDelegate.dic objectForKey:@"URL"];
+//    self.ticketDetailArray = [_simple selectTicketDBWithUserUUID:appDelegate.dic[@"uuid"] SeverIP:appDelegate.dic[@"URL"]];
+    [self filtData];
+}
+//TODO:通过时间过期删除
+-(void)filtData{
+    if (self.ticketDetailArray.count > 0) {
+        NSMutableArray * orArr = [NSMutableArray arrayWithArray:self.ticketDetailArray];
+        for (TicketDetailModel * normalModel in orArr) {
+            NSString * invaildTime = normalModel.invaildTime;
+            int compareResult = [helper compareOneDay:invaildTime];
+            if (compareResult == -1) {
+//                [_simple deleteTicketBDWithKey:normalModel.uuid];
+                [self.ticketDetailArray removeObject:normalModel];
+            }
+        }
+    }
+}
+
+- (void)pushAlertView:(NSNotification *)notification {
+    NSLog(@"有通知来了");
+    alarmNum++;
+    alarmButton.alarmNumLabel.text = [NSString stringWithFormat:@"%ld",(long)alarmNum];
+    alarmButton.alarmNumLabel.hidden = NO;
+    [alarmButton.alarmBut setBackgroundImage:[UIImage imageNamed:@"alarm_select"] forState:UIControlStateNormal];
+}
+
+-(void)alarmClick{
+    NSLog(@"alarm click");
+    if (alarmNum!=0) {
+        alarmNum = 0;
+        alarmButton.alarmNumLabel.hidden = YES;
+        [alarmButton.alarmBut setBackgroundImage:[UIImage imageNamed:@"alarm_normal"] forState:UIControlStateNormal];
+//        WarnViewController * next = [[WarnViewController alloc]init];
+//        next.isPerson = YES;
+//        [self.navigationController pushViewController:next animated:YES];
+    }else{
+        UIAlertController * alert = [UIAlertController alertControllerWithTitle:nil message:@"没有新的告警" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction * okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        [alert addAction:okAction];
+        [self presentViewController:alert animated:YES completion:nil];
+    }
+}
+
+-(void)detailClick{
+//    WarnViewController * next = [[WarnViewController alloc]init];
+//    next.isPerson = IsPerson;
+//    [self.navigationController pushViewController:next animated:YES];
+}
+
+-(void)refreshClick{
+    [self loadPieDataWithIsPerson:IsPerson IsFirstTimeReload:NO];
+}
+
+-(void)onRadioButtonValueChanged:(RadioButton*)but{
+    if (but.selected) {
+        switch (but.tag) {
+            case 0:
+            {
+                IsPerson = YES;
+                [self loadPieDataWithIsPerson:IsPerson IsFirstTimeReload:NO];
+            }
+                break;
+            case 1:
+            {
+                IsPerson = NO;
+                [self loadPieDataWithIsPerson:IsPerson IsFirstTimeReload:NO];
+            }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+- (void)loadPieChartViewWithSuperView:(UIView*)Fuview
+{
+    //包含文本的视图frame
+    chartView = [[CustomPieView alloc]initWithFrame:CGRectMake(5, 45, Fuview.frame.size.width - 105, 100)];
+    //数据源
+    chartView.segmentDataArray = segmentDataArray;
+    //颜色数组，若不传入，则为随即色
+    chartView.segmentColorArray = segmentColorArray;
+    //标题，若不传入，则为“其他”
+    chartView.segmentTitleArray = segmentTitleArray;
+    //动画时间
+    chartView.animateTime = 2.0;
+    //内圆的颜色
+    chartView.innerColor = [UIColor whiteColor];
+    //内圆的半径
+    chartView.innerCircleR = 5;
+    //大圆的半径
+    chartView.pieRadius = 40;
+    //整体饼状图的背景色
+    chartView.backgroundColor = RGBCOLOR(240, 241, 242, 1.0);
+    //圆心位置，此属性会被centerXPosition、centerYPosition覆盖，圆心优先使用centerXPosition、centerYPosition
+//    chartView.centerType = PieCenterTypeMiddleLeft;
+    chartView.centerXPosition = chartView.frame.size.width>280?70:40;
+    chartView.centerYPosition = 50;
+    //是否动画
+    chartView.needAnimation = YES;
+    //动画类型，全部只有一个动画；各个部分都有动画
+    chartView.type = PieAnimationTypeTogether;
+    //圆心，相对于饼状图的位置
+//    chartView.centerXPosition = 70;
+    //右侧的文本颜色是否等同于模块的颜色
+    chartView.isSameColor = NO;
+    //文本的行间距
+    chartView.textSpace = 0;
+    //文本的字号
+    chartView.textFontSize = 12;
+    //文本的高度
+    chartView.textHeight = 20;
+    //文本前的颜色块的高度
+    chartView.colorHeight = 10;
+    //文本前的颜色块是否为圆
+    chartView.isRound = YES;
+    //文本距离右侧的间距
+    chartView.textRightSpace = 0;
+    //支持点击事件
+    chartView.canClick = YES;
+    //点击圆饼后的偏移量
+    chartView.clickOffsetSpace = 10;
+    //不隐藏右侧的文本
+    chartView.hideText = NO;
+    //点击触发的block，index与数据源对应
+    [chartView clickPieView:^(NSInteger index) {
+        NSLog(@"Click Index:%ld",index);
+    }];
+    chartView.backgroundColor = [UIColor whiteColor];
+    //添加到视图上
+    [chartView showCustomViewInSuperView:Fuview];
+    
+    //设置默认选中的index，如不需要该属性，可注释
+    //[chartView setSelectedIndex:2];
+    
+}
+
+
+- (void)loadPieDataWithIsPerson:(BOOL)isPerson IsFirstTimeReload:(BOOL)isFirstTime
+{
+    [warnHelper getWarnNumWithIsPerson:isPerson Success:^(NSInteger allNum, NSInteger deadlyNum, NSInteger seriousNum, NSInteger commonNum) {
+        TitleLabel.text = [NSString stringWithFormat:@"告警总量:%ld",allNum];
+        [segmentDataArray removeAllObjects];
+        [segmentTitleArray removeAllObjects];
+        [segmentColorArray removeAllObjects];
+        if (deadlyNum!=0) {
+            [segmentDataArray addObject:[NSNumber numberWithInteger:deadlyNum]];
+            [segmentTitleArray addObject:@"致命"];
+            [segmentColorArray addObject:[UIColor redColor]];
+        }
+        if (seriousNum!=0) {
+            [segmentDataArray addObject:[NSNumber numberWithInteger:seriousNum]];
+            [segmentTitleArray addObject:@"严重"];
+            [segmentColorArray addObject:[UIColor orangeColor]];
+        }
+        if (commonNum!=0) {
+            [segmentDataArray addObject:[NSNumber numberWithInteger:commonNum]];
+            [segmentTitleArray addObject:@"普通"];
+            [segmentColorArray addObject:[UIColor blueColor]];
+        }
+        if (segmentDataArray.count==0) {
+            [segmentDataArray addObject:[NSNumber numberWithInteger:1]];
+            [segmentTitleArray addObject:@"没告警"];
+            [segmentColorArray addObject:[UIColor greenColor]];
+        }
+        if (isFirstTime) {
+            [self loadPieChartViewWithSuperView:showView];
+        }else{
+            //数据源
+            chartView.segmentDataArray = segmentDataArray;
+            chartView.segmentColorArray = segmentColorArray;
+            chartView.segmentTitleArray = segmentTitleArray;
+            [chartView updatePieView];
+        }
+    } failure:^(NSString *reason) {
+        if (isFirstTime) {
+            [self loadPieChartViewWithSuperView:showView];
+        }else{
+            chartView.segmentDataArray = segmentDataArray;
+            chartView.segmentColorArray = segmentColorArray;
+            chartView.segmentTitleArray = segmentTitleArray;
+            [chartView updatePieView];
+        }
+    }];
+    
+}
+#pragma mark - 侧滑
+-(void)openLLSlideMenuAction{
+    //TODO: 打开菜单
+    if (_slideMenu.ll_isOpen) {
+        [_slideMenu ll_closeSlideMenu];
+        
+    } else {
+        [_slideMenu ll_openSlideMenu];
+    }
+}
+
+//TODO:全屏侧滑手势监听
+- (void)swipeLeftHandle:(UIScreenEdgePanGestureRecognizer *)recognizer {
+    // 如果菜单已打开则禁止滑动
+    if (_slideMenu.ll_isOpen || _slideMenu.ll_isAnimating) {
+        return;
+    }
+    // 计算手指滑的物理距离（滑了多远，与起始位置无关）
+    CGFloat progress = [recognizer translationInView:self.view].x / (self.view.bounds.size.width * 1.0);
+    // 把这个百分比限制在 0~1 之间
+    progress = MIN(1.0, MAX(0.0, progress));
+    // 当手势刚刚开始，我们创建一个 UIPercentDrivenInteractiveTransition 对象
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        self.percent = [[UIPercentDrivenInteractiveTransition alloc] init];
+    } else if (recognizer.state == UIGestureRecognizerStateChanged) {
+        // 当手慢慢划入时，我们把总体手势划入的进度告诉 UIPercentDrivenInteractiveTransition 对象。
+        [self.percent updateInteractiveTransition:progress];
+        _slideMenu.ll_distance = [recognizer translationInView:self.view].x;
+    
+    } else if (recognizer.state == UIGestureRecognizerStateCancelled || recognizer.state == UIGestureRecognizerStateEnded) {
+        // 当手势结束，我们根据用户的手势进度来判断过渡是应该完成还是取消并相应的调用 finishInteractiveTransition 或者 cancelInteractiveTransition 方法.
+        if (progress > 0.4) {
+            [self.percent finishInteractiveTransition];
+            [_slideMenu ll_openSlideMenu];
+        }else{
+            [self.percent cancelInteractiveTransition];
+            [_slideMenu ll_closeSlideMenu];
+        }
+        self.percent = nil;
+    }
+}
+
+//TODO:点击图片监听事件
+- (void)imageViewTapAction {
+//    PersonInfoViewController * next = [[PersonInfoViewController alloc]init];
+//    [self.navigationController pushViewController:next animated:YES];
+}
+
+#pragma mark ----UICollectionView的代理方法----
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    int width = (kScreenWidth-50) / 5 ;
+    int height = width + 20;
+    return CGSizeMake(width, height);
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return 2;//这里因为需求固定，所以固定
+}
+//headView
+-(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section{
+    return CGSizeMake(kScreenWidth, 20);
+}
+
+-(UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
+{
+    return UIEdgeInsetsMake(5, 5, 0, 5);//分别为上、左、下、右
+    
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    switch (section) {
+        case 0:
+            return self.firstSectionCellModelArray.count;
+            break;
+//        case 1:
+//            return self.secondSectionCellModelArray.count;
+//            break;
+        case 1:
+            return self.thirdSectionCellModelArray.count;
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath {
+    if (kind == UICollectionElementKindSectionHeader) {
+        headView = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:headerViewIdentity forIndexPath:indexPath];
+        [headView.refreshBut addTarget:self action:@selector(refreshTicket) forControlEvents:UIControlEventTouchUpInside];
+        [headView.refreshBut setBackgroundImage:[UIImage imageNamed:@"refresh"] forState:UIControlStateNormal];
+        [headView setOtherLineTitleLableText:self.headTitleArray[indexPath.section]];
+        return headView;
+    }
+    return nil;
+}
+#pragma mark -刷新授权
+-(void)refreshTicket{
+    NSLog(@"刷新授权");
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    HomeCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:homeCellIdentity forIndexPath:indexPath];
+    switch (indexPath.section) {
+        case 0:
+            cell.cellModel = self.firstSectionCellModelArray[indexPath.row];
+            break;
+//        case 1:
+//            cell.cellModel = self.secondSectionCellModelArray[indexPath.row];
+//            break;
+        case 1:
+            cell.cellModel = self.thirdSectionCellModelArray[indexPath.row];
+            break;
+        default:
+            break;
+    }
+    return cell;
+}
+#pragma mark ----cell的点击事件----
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    [self selectCellAction:indexPath];
+}
+
+- (void)selectCellAction:(NSIndexPath *)indexPath {
+    switch (indexPath.section) {
+        case 0:
+            [self itemActionForFirstSection:indexPath.row];
+            break;
+//        case 1:
+//            [self itemActionForSecondSection:indexPath.row];
+//            break;
+        case 1:
+            [self itemActionForThirdSection:indexPath.row];
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark ----第一栏cell的点击事件----
+- (void)itemActionForFirstSection:(NSInteger)indexPathRow {
+    switch (indexPathRow) {
+        case 0:{
+            InitDeviceViewController * next = [[InitDeviceViewController alloc]init];
+            [self.navigationController pushViewController:next animated:YES];
+            break;
+        }
+        case 1:
+        case 2:
+        case 3:{
+            
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark ----第二栏cell的点击事件----
+- (void)itemActionForSecondSection:(NSInteger)indexPathRow {
+    switch (indexPathRow) {
+        case 0:{
+            
+        }
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:{
+
+        }
+            break;
+        default:
+            break;
+    }
+}
+#pragma mark ----第三栏cell的点击事件----
+-(void)itemActionForThirdSection:(NSInteger)indexPathRow{
+    switch (indexPathRow) {
+        case 0:{
+            Device_Main_ViewController *deviceVc = [STORYBOARD instantiateViewControllerWithIdentifier:NSStringFromClass([Device_Main_ViewController class])];
+            [self.navigationController pushViewController:deviceVc animated:YES];
+        }
+            break;
+        case 1:{
+            SiteManageViewController * next = [[SiteManageViewController alloc]init];
+            [self.navigationController pushViewController:next animated:YES];
+        }
+            break;
+        case 2:{
+            LockManagerViewController * next = [[LockManagerViewController alloc]init];
+            [self.navigationController pushViewController:next animated:YES];
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+
+#pragma mark - tabelView delegate
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return TabelViewDataArr.count;
+}
+
+-(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    LeftTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
+    CollectionCellModel * model = TabelViewDataArr[indexPath.row];
+    [cell reloadDataWithModel:model];
+    return cell;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    switch (indexPath.row) {
+        case 0:{
+//            PersonInfoViewController * next = [[PersonInfoViewController alloc]init];
+//            [self.navigationController pushViewController:next animated:YES];
+        }
+            break;
+        case 1:{
+            
+        }
+            break;
+        case 2:{
+            KeychainItemWrapper * keychain = [[KeychainItemWrapper alloc] initWithIdentifier:@"Login" accessGroup:nil];// 通过同样的标志创建keychain
+            [keychain setObject:@"MY_APP_CREDENTIALS" forKey:(id)kSecAttrService];
+            [keychain setObject:@"" forKey:(__bridge id)(kSecValueData)];
+            /*
+             **注销用户事再次设置别名,避免继续推送
+             */
+//            [JPUSHService setAlias:@"1" completion:nil seq:1];
+            [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+        }
+            break;
+        default:
+            break;
+    }
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

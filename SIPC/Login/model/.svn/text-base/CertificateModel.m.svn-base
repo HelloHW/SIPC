@@ -1,0 +1,13 @@
+//
+//  CertificateModel.m
+//  Sterm
+//
+//  Created by TomXu on 16/4/28.
+//  Copyright (c) 2016年 Stag. All rights reserved.
+//
+
+#import "CertificateModel.h"
+
+@implementation CertificateModel
+
+@end

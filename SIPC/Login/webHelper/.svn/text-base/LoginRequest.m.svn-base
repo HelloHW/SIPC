@@ -1,0 +1,123 @@
+//
+//  LoginRequest.m
+//  ABMS
+//
+//  Created by ELI on 17/8/17.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import "LoginRequest.h"
+#import "KeychainItemWrapper.h"
+#import "SvUDIDTools.h"
+@interface LoginRequest(){
+    KeychainItemWrapper * keychain;
+}
+@end
+
+
+@implementation LoginRequest
+-(instancetype)init{
+    if (self = [super init]) {
+        keychain = [[KeychainItemWrapper alloc] initWithIdentifier:@"Login" accessGroup:nil];// 通过同样的标志创建keychain
+    }
+    return self;
+}
++(LoginRequest*)shareInsetanse{
+    static LoginRequest * request = nil;
+    if (!request) {
+        request = [[LoginRequest alloc]init];
+    }
+    return request;
+}
+
+-(void)LoginWithUserName:(NSString*)userName Password:(NSString*)password
+                 success:(void (^)(NSString * backStr))success
+                 failure:(void (^)(NSString *failReason))failure;{
+    if (userName.length!=0&&password.length!=0) {
+//        success(@"");
+//        return;
+        NSString *soapMessage = [NSString stringWithFormat:
+                                 @"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                 "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+                                 "<soap:Body>\n"
+                                 "<login xmlns=\"http://webservice.samw.segp.staginfo.com\">\n"
+                                 "<account>%@</account>\n"
+                                 "<passWord>%@</passWord>\n"
+                                 "<terminalId>%@</terminalId>\n"
+                                 "</login>\n"
+                                 "</soap:Body>\n"
+                                 "</soap:Envelope>\n",userName,password,[SvUDIDTools UDID]
+                                 ];
+        NSString * urlStr = [NSString stringWithFormat:@"http://%@/services/UserService?wsdl",appDelegate.serverIP];
+        
+        [NetUtil POSTBackJSONStringWithURL:urlStr soapString:soapMessage Type:LOGIN_REQUEST success:^(NSURLResponse *response, id responseObject) {
+            NSData * data = [responseObject dataUsingEncoding:NSUTF8StringEncoding];
+            NSDictionary * dic = [NSJSONSerialization JSONObjectWithData:data
+                                                            options:NSJSONReadingMutableContainers
+                                                              error:nil];
+            
+            NSInteger result = [dic[@"code"] integerValue];
+            if (result==1) {
+                [keychain setObject:@"MY_APP_CREDENTIALS" forKey:(id)kSecAttrService];
+                [keychain setObject:userName forKey:(__bridge id)(kSecAttrAccount)];
+                [keychain setObject:password forKey:(__bridge id)(kSecValueData)];
+                success(dic[@"message"]);
+                NSMutableDictionary *userDic = [NSMutableDictionary dictionaryWithDictionary:dic[@"userInfoBean"]];
+                NSLog(@"%@",userDic);
+                if ([userDic[@"description"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"description"];
+                }
+                if ([userDic[@"lastLoginTime"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"lastLoginTime"];
+                }
+                if ([userDic[@"password"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"password"];
+                }
+                if ([userDic[@"roleName"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"roleName"];
+                }
+                if ([userDic[@"deptName"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"deptName"];
+                }
+                
+                if ([userDic[@"companyName"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"companyName"];
+                }
+                if ([userDic[@"displayName"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"displayName"];
+                }
+                if ([userDic[@"email"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"email"];
+                }
+                if ([userDic[@"idNumber"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"idNumber"];
+                }
+                if ([userDic[@"password"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"password"];
+                }
+                if ([userDic[@"phone"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"phone"];
+                }
+                if ([userDic[@"roleName"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"roleName"];
+                }
+                if ([userDic[@"tags"]isKindOfClass:[NSNull class]]) {
+                    [userDic setObject:@"" forKey:@"tags"];
+                }
+                appDelegate.userId = userDic[@"id"];
+                NSString * plistPath = USERS_PLIST_PATH;
+                NSLog(@"%@",userDic);
+               BOOL re =  [userDic writeToFile:plistPath atomically:YES];
+                NSLog(@"%@",re?@"yes":@"no");
+            }else{
+                failure(dic[@"message"]);
+            }
+            
+        } failure:^(NSURLResponse *response, NSError *error) {
+            failure(@"请求超时");
+        }];
+    }else{
+        failure(@"用户名或密码为空");
+    }
+}
+@end

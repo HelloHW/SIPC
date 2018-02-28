@@ -1,0 +1,87 @@
+//
+//  config.h
+//  SIPC
+//
+//  Created by ELI.钟华威 on 2018/1/17.
+//  Copyright © 2018年 Stag. All rights reserved.
+//
+
+#ifndef config_h
+#define config_h
+
+//颜色
+#define RGBA(r,g,b,a) [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:a]
+#define kMainColor RGBA(0,112,192,1.0f)
+
+//适配iphone X的头部高度
+#define SafeAreaTopHeight (kScreenHeight == 812.0 ? 88 : 64)
+// 尺寸
+#define kScreenSize   [[UIScreen mainScreen] bounds].size
+#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
+#define kScreenWidth  [[UIScreen mainScreen] bounds].size.width
+// 访问全局属性
+#define appDelegate ((AppDelegate *)[[UIApplication sharedApplication] delegate])
+// 所有的故事版
+#define STORYBOARD [UIStoryboard storyboardWithName:@"Main" bundle:nil]
+
+//通知名称
+#define CONNECTSECCESS @"ConnectSuccess"
+#define DISCONNECT @"Disconnect"
+#define NJALDISCONNECT @"NJALDisconnect"
+#define HBCTDISCONNECT @"HBCTDisconnect"
+#define OPERAKEY @"d762a451-4f42-4610-b170-4fc6c2069e7b"
+#define TICKETID @"fb40018a-ba29-4fd7-94f4-35ff8b3748c8"
+
+
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+typedef NS_ENUM(NSInteger, SMSGetCodeType) {
+    SMSGetCodeRegister = 0,         //注册
+    SMSGetCodeForgetPasw = 1,       //忘记密码
+};
+
+typedef NS_ENUM(NSInteger, SiteApproveType) {
+    siteApprove     = 1,            //待审批列表
+    siteApproved    = 2,            //已审批列表
+};
+typedef NS_ENUM(NSInteger, DNCPOperationType) {
+    REARLOCKINFO = 1,               //读取门锁信息
+    INITILOCK = 2,                  //初始化
+    LOCKORUNLOCK = 3,               //开关锁
+    LOCKLOG = 4,                    //设备日志记录
+    READPOWER = 5,                  //读取电量
+    LOCKDETAILINFO = 6,             //获取锁具详细信息
+    CHANGEOPERATIONKEY = 7,         //更换密钥
+    CLEAR_LOCK = 8,                 //清空
+    SUPERCLEAR = 9,                 //超级清空
+    GET_LOCK_TYPE = 10,             //获取锁具类型
+    CHANGE_LOCKID = 11,             //修改锁ID
+    DOORCONTACT = 12,               //设置门磁
+    OFFLINEKEY = 13,                //离线钥匙
+};
+#import <SMS_SDK/SMSSDK.h>
+#import "SMSSDKUIProcessHUD.h"
+
+#define SMSSDKUIBundle [[NSBundle alloc] initWithPath:[[NSBundle mainBundle] pathForResource:@"SMSSDKUI" ofType:@"bundle"]]
+
+#define SMSLocalized(_S_) NSLocalizedStringFromTableInBundle((_S_), @"Localizable", SMSSDKUIBundle, nil)
+
+#define StatusBarHeight [UIApplication sharedApplication].statusBarFrame.size.height
+
+#ifdef DEBUG
+
+#define SMSUILog(s, ...) NSLog(@"\n\n---------------------------------------------------\n %s[line:%d] \n %@ \n---------------------------------------------------\n", __FUNCTION__, __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__])
+
+#else
+
+#define SMSUILog(s, ...)
+
+#endif
+
+
+
+#define SMSSDKAlert(_S_, ...)     [[[UIAlertView alloc] initWithTitle:NSLocalizedStringFromTableInBundle(@"notice", @"Localizable", SMSSDKUIBundle, nil) message:[NSString stringWithFormat:(_S_), ##__VA_ARGS__] delegate:nil cancelButtonTitle:NSLocalizedStringFromTableInBundle(@"sure", @"Localizable", SMSSDKUIBundle, nil) otherButtonTitles:nil] show]
+#endif
+
+#endif /* config_h */

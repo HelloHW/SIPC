@@ -1,0 +1,22 @@
+//
+//  HomeHeadCollectionReusableView.m
+//  ABMS
+//
+//  Created by ELI.钟华威 on 2018/1/5.
+//  Copyright © 2018年 Stag. All rights reserved.
+//
+
+#import "HomeHeadCollectionReusableView.h"
+
+@implementation HomeHeadCollectionReusableView
+- (void)setOtherLineTitleLableText:(NSString *)title{
+    self.TitleLabel.text = title;
+    self.TitleLabel.font = [UIFont systemFontOfSize:12.0];
+}
+
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    // Initialization code
+}
+
+@end

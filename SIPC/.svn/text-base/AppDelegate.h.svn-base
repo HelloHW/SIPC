@@ -1,0 +1,89 @@
+//
+//  AppDelegate.h
+//  SIPC
+//
+//  Created by ELI.钟华威 on 2018/1/17.
+//  Copyright © 2018年 Stag. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "ViewController.h"
+typedef NS_ENUM(int, lockStautss) {
+    EMPTY = 0,               //空闲
+    DEPLORED,                //部署中
+    SERVING_UNLOCK,          //服役（开门）
+    SERVING_LOCK,            //服役（关门）
+    BROKEN,                  //已损坏
+    EMPTYLOCK,               //空锁
+};
+typedef NS_ENUM(int, KeyStauts) {
+    REGISTER = 1,                 //钥匙已经注册
+    NO_REGISTER = 2,              //钥匙还没注册
+    KEY_DISABLE = 3,              //钥匙已被禁用
+};
+
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+@property (strong, nonatomic) ViewController * rootViewController;
+
+
+@property(nonatomic, copy) NSString *serverIP;      //服务IP
+@property(nonatomic, copy) NSString *userId;        //用户ID
+@property(nonatomic, copy) NSString *userName;      //用户名
+
+@property (strong, nonatomic) NSDictionary *dic;    //用户信息字典
+
+@property (nonatomic ,assign)double lon;            //经纬度
+@property (nonatomic ,assign)double lat;
+
+@property (nonatomic ,copy)NSString *keyID;         //钥匙ID
+@property (nonatomic ,copy)NSString *lockName;      //锁名
+@property (nonatomic ,copy)NSString *lockID;
+
+@property (nonatomic ,assign)BOOL DOrC;             //钥匙和锁具的连接状态-yes连上，no断开
+@property (nonatomic ,assign)BOOL IsLockWithoutKey;
+//记录选中的tableview 对应的设备UUID
+@property (copy, nonatomic) NSString *deviceUuid;
+
+
+/** 屏幕中间添加提示语*/
+- (void)makeToastTitle:(NSString *)toastTitle;
+
+/**
+ 根据标题字符串大小自适应
+
+ @param content 标题
+ @param font 字体大小
+ @param size 原size
+ @return 返回size
+ */
+-(CGSize) boundingRectWithContent:(NSString*) content Font:(UIFont*) font Size:(CGSize) size;
+
+/** 将相应数据转成数组*/
+- (NSArray *)conversionData:(id)responseObject;
+/** 将相应数据转成字典*/
+- (NSDictionary *)conversionDataForDictionary:(id)responseObject;
+/**
+ 判断对象是否为null
+ 
+ @param object 对象
+ @return 返回布尔值
+ */
+-(BOOL)isNull:(id)object;
+
+/**
+ 判断对象字典中是否为空
+ */
+- (NSString*)dealNullStr:(NSString*)interString;
+/**
+ 拼接字符串
+ */
+- (NSString *)appendString:(NSString *)titleString contentString:(NSString *)contentString;
+/**
+ NSDate转String
+ */
+- (NSString *)dateTypeConverToStringType:(NSDate *)date;
+@end
+

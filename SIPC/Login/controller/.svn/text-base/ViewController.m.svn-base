@@ -1,0 +1,136 @@
+//
+//  ViewController.m
+//  SIPC
+//
+//  Created by ELI.钟华威 on 2018/1/17.
+//  Copyright © 2018年 Stag. All rights reserved.
+//
+
+#import "ViewController.h"
+#import "LoginView.h"
+#import "LoginModel.h"
+@interface ViewController ()<LoginDelegate>
+{
+    KeychainItemWrapper * keychainHelper;
+    LoginView * loginView;
+    LoginModel * loginModel;
+}
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    keychainHelper = [[KeychainItemWrapper alloc] initWithIdentifier:@"Login" accessGroup:nil];// 通过同样的标志创建keychain
+    loginModel = [[LoginModel alloc]init];
+    [loginModel initUserInfo];
+    
+    loginView = [[LoginView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
+    [loginView initView];
+    
+    loginView.userNameTF.text = loginModel.userName;
+    loginView.passWordTF.text = loginModel.passWord;
+    if (loginModel.passWord.length>0) {
+        loginView.lineLabel.hidden = NO;
+        loginView.eyeBut.hidden = NO;
+    }else{
+        CGRect PWrect               = loginView.passWordTF.frame;
+        PWrect.size.width           = self.view.frame.size.width-170;
+        loginView.passWordTF.frame  = PWrect;
+    }
+    
+    //添加登录按钮点击事件
+    [loginView.loginBut addTarget:self action:@selector(login) forControlEvents:UIControlEventTouchUpInside];
+    //添加记住密码按钮点击事件
+    [loginView.forgetBut addTarget:self action:@selector(forget:) forControlEvents:UIControlEventTouchUpInside];
+    //添加设置按钮点击事件
+    [loginView.eyeBut addTarget:self action:@selector(eye:) forControlEvents:UIControlEventTouchUpInside];
+    //添加注册用户按钮点击事件
+    [loginView.registerBut addTarget:self action:@selector(regist) forControlEvents:UIControlEventTouchUpInside];
+    loginView.delegate = self;
+    loginView.IPTF.text = appDelegate.serverIP;
+    [self.view addSubview:loginView];
+}
+
+-(void)login{
+    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    
+    LoginRequest * loginRequest = [LoginRequest shareInsetanse];
+    [loginRequest LoginWithUserName:loginView.userNameTF.text Password:loginView.passWordTF.text success:^(NSString * backStr) {
+        appDelegate.userName = loginView.userNameTF.text;
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
+        /*
+         **登陆成功为极光推送添加alias
+         */
+        NSString * name = [loginView.userNameTF.text lowercaseString];
+        NSString *trimmedString = [NSString stringWithFormat:@"%@%@",appDelegate.serverIP,name];
+        trimmedString = [trimmedString stringByReplacingOccurrencesOfString:@"." withString:@""];
+        trimmedString = [trimmedString stringByReplacingOccurrencesOfString:@":" withString:@""];
+        trimmedString = [trimmedString stringByReplacingOccurrencesOfString:@"/" withString:@""];
+        trimmedString = [trimmedString stringByReplacingOccurrencesOfString:@" " withString:@""];
+        NSLog(@"trimmedString=%@",trimmedString);
+//        [JPUSHService setAlias:trimmedString completion:^(NSInteger iResCode, NSString *iAlias, NSInteger seq) {
+//            NSLog(@"iResCode=%ld---iAlias=%@-----seq=%ld",(long)iResCode,iAlias,(long)seq);
+//        } seq:1];
+        HomeViewController * next = [[HomeViewController alloc]init];
+        UINavigationController *nav = [[UINavigationController alloc]initWithRootViewController:next];
+        [self presentViewController:nav animated:YES completion:nil];
+        //        app.tabBarViewController = [[TabBarViewController alloc]init];
+        //        [self presentViewController:app.tabBarViewController animated:YES completion:nil];
+        
+    } failure:^(NSString *failReason) {
+//        HomeViewController * next = [[HomeViewController alloc]init];
+//        UINavigationController *nav = [[UINavigationController alloc]initWithRootViewController:next];
+//        [self presentViewController:nav animated:YES completion:nil];
+        [appDelegate makeToastTitle:failReason];
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
+    }];
+}
+
+
+
+-(void)eye:(UIButton*)button{
+    if (!button.selected) {
+        NSString *tempPwdStr = loginView.passWordTF.text;
+        loginView.passWordTF.text = @""; // 这句代码可以防止切换的时候光标偏移
+        loginView.passWordTF.secureTextEntry = NO;
+        loginView.passWordTF.text = tempPwdStr;
+    }else{
+        NSString *tempPwdStr = loginView.passWordTF.text;
+        loginView.passWordTF.text = @"";
+        loginView.passWordTF.secureTextEntry = YES;
+        loginView.passWordTF.text = tempPwdStr;
+    }
+    button.selected = !button.selected;
+}
+
+-(void)forget:(UIButton*)but{
+    SMSSDKUIGetCodeViewController *vc = [[SMSSDKUIGetCodeViewController alloc] initWithMethod:SMSGetCodeForgetPasw Title:@"忘记密码"];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+    [self presentViewController:nav animated:YES completion:nil];
+}
+
+
+-(void)regist{
+    SMSSDKUIGetCodeViewController *vc = [[SMSSDKUIGetCodeViewController alloc] initWithMethod:SMSGetCodeRegister Title:@"注册"];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+    [self presentViewController:nav animated:YES completion:nil];
+}
+
+-(void)changeIP{
+//    TerminalRegistrationViewController *vc = [[TerminalRegistrationViewController alloc] init];
+//    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+//    [self presentViewController:nav animated:YES completion:nil];
+}
+
+
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

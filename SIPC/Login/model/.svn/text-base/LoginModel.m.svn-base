@@ -1,0 +1,25 @@
+//
+//  LoginModel.m
+//  有源设备
+//
+//  Created by ELI on 17/7/28.
+//  Copyright © 2017年 Stag. All rights reserved.
+//
+
+#import "LoginModel.h"
+
+@implementation LoginModel
+
+-(void)initUserInfo{
+     KeychainItemWrapper *keychain = [[KeychainItemWrapper alloc] initWithIdentifier:@"Login" accessGroup:nil];
+//    BOOL IsRemerber = [[keychain objectForKey:(__bridge id)(kSecAttrIsInvisible)]boolValue];
+//    NSLog(@"IsRemerber==%@",IsRemerber?@"yes":@"no");
+//    if (IsRemerber) {
+        _userName = [keychain objectForKey:(__bridge id)(kSecAttrAccount)];
+        _passWord = [keychain objectForKey:(__bridge id)(kSecValueData)];
+//    }else{
+//        _userName = @"";
+//        _passWord = @"";
+//    }
+}
+@end
